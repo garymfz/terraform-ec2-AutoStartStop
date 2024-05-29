@@ -1,11 +1,4 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "5.8.0"
-    }
-  }
-}
+
 provider "aws" {
   region  = var.region
   profile = var.accountname
@@ -13,11 +6,11 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    profile        = "yourprofile"
-    bucket         = "yourtfstate"
-    key            = "key.tfstate"
-    region         = "yourregion"
+    profile        = ""
+    bucket         = "changeme"
+    key            = "changeme"
+    region         = "changeme"
     encrypt        = true
-    dynamodb_table = "yourdynamodbtable"
+    dynamodb_table = "changeme"
   }
 }
