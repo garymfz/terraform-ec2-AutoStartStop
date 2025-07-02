@@ -1,5 +1,3 @@
-#creates an eventbridge rule to make the lambdas work
-
 #eventbridge rule for start ec2
 resource "aws_cloudwatch_event_rule" "ec2-start" {
   name        = "ec2-autostart"
