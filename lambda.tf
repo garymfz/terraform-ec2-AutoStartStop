@@ -1,79 +1,75 @@
-#Lambda Start Function#
-
-#Lambda .py file
 data "archive_file" "lambda_start" {
   type        = "zip"
-  source_file = "./lambda_functions/ec2-start.py"
-  output_path = "./lambda_functions/lambda_function_ec2start.zip"
-
+  source_file = "${path.module}/lambda_functions/ec2_start.py"
+  output_path = "${path.root}/.terraform/${var.name_prefix}-ec2-start.zip"
 }
 
-#Lambda function
-resource "aws_lambda_function" "ec2-start" {
-  filename      = "./lambda_functions/lambda_function_ec2start.zip"
-  function_name = "ec2-start"
-  role          = aws_iam_role.EC2-Start-Stop-Role.arn
-  handler       = "ec2-start.lambda_handler"
+resource "aws_lambda_function" "ec2_start" {
+  filename      = data.archive_file.lambda_start.output_path
+  function_name = "${var.name_prefix}-start"
+  role          = aws_iam_role.ec2_start_stop.arn
+  handler       = "ec2_start.lambda_handler"
+  runtime       = var.lambda_runtime
+  timeout       = var.lambda_timeout
 
   source_code_hash = data.archive_file.lambda_start.output_base64sha256
-  
-  runtime = "python3.9"
-  timeout = 10
 
-    ephemeral_storage {
-    size = 512 # Min 512 MB and the Max 10240 MB
+  ephemeral_storage {
+    size = 512
   }
 
   environment {
     variables = {
       supertag = var.supertag
+      tagvalue = var.tag_value
     }
+  }
 
+  tags = var.tags
 }
-}
-#Lambda stop function#
-#Lambda .py file
+
 data "archive_file" "lambda_stop" {
   type        = "zip"
-  source_file = "./lambda_functions/ec2-stop.py"
-  output_path = "./lambda_functions/lambda_function_ec2stop.zip"
+  source_file = "${path.module}/lambda_functions/ec2_stop.py"
+  output_path = "${path.root}/.terraform/${var.name_prefix}-ec2-stop.zip"
 }
-#Lambda function
-resource "aws_lambda_function" "ec2-stop" {
-  filename      = "./lambda_functions/lambda_function_ec2stop.zip"
-  function_name = "ec2-stop"
-  role          = aws_iam_role.EC2-Start-Stop-Role.arn
-  handler       = "ec2-stop.lambda_handler"
-  
+
+resource "aws_lambda_function" "ec2_stop" {
+  filename      = data.archive_file.lambda_stop.output_path
+  function_name = "${var.name_prefix}-stop"
+  role          = aws_iam_role.ec2_start_stop.arn
+  handler       = "ec2_stop.lambda_handler"
+  runtime       = var.lambda_runtime
+  timeout       = var.lambda_timeout
 
   source_code_hash = data.archive_file.lambda_stop.output_base64sha256
 
-  runtime = "python3.9"
-  timeout = 10
-    ephemeral_storage {
-    size = 512 # Min 512 MB and the Max 10240 MB
+  ephemeral_storage {
+    size = 512
   }
-    environment {
+
+  environment {
     variables = {
       supertag = var.supertag
+      tagvalue = var.tag_value
     }
+  }
 
+  tags = var.tags
 }
 
-}
-#allows event bridge to invoke a lambda_function
-resource "aws_lambda_permission" "allow_cloudwatch" {
+resource "aws_lambda_permission" "allow_eventbridge_start" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.ec2-start.id
+  function_name = aws_lambda_function.ec2_start.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.ec2-start.arn
+  source_arn    = aws_cloudwatch_event_rule.ec2_start.arn
 }
 
-resource "aws_lambda_permission" "allow_cloudwatchstop" {
+resource "aws_lambda_permission" "allow_eventbridge_stop" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.ec2-stop.id
+  function_name = aws_lambda_function.ec2_stop.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.ec2-stop.arn
+  source_arn    = aws_cloudwatch_event_rule.ec2_stop.arn
 }
