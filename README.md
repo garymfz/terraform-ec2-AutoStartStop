@@ -26,7 +26,7 @@ provider "aws" {
 }
 
 module "ec2_auto_start_stop" {
-  source = "git::https://github.com/<org-or-user>/terraform-ec2-AutoStartStop.git"
+  source = "git::https://github.com/garymfz/terraform-ec2-AutoStartStop.git"
 
   name_prefix = "dev-ec2-scheduler"
   cronstart   = "cron(25 6 ? * MON-FRI *)"
